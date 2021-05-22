@@ -9,6 +9,7 @@
 void adc_init();
 uint16_t check_sens();
 uint8_t check_but();
+uint8_t check_mov();
 
 uint16_t sensor_val = 0;
 uint16_t set_val = 0;
@@ -23,6 +24,10 @@ int main(void)
 	//button input pullup (PB4)
 	DDRB &= ~(1 << DDB4);
 	PORTB |= (1 << DDB4);
+	
+	//movement sensor input
+	DDRB &= ~(1 << DDB0);
+	//PORTB |= (1 << DDB0);
 	
 	set_val = read_eeprom();
 	if (set_val > 1024) set_val = 500;
@@ -41,12 +46,15 @@ int main(void)
 			_delay_ms(100);
 		}
 		
-		if (sensor_val > (set_val + hysteresis))
-		{
-			PORTB &= ~(1 << DDB1);
-		}
 		
-		if (sensor_val < (set_val - hysteresis))
+		if (check_mov())
+		{
+			if (sensor_val > (set_val + hysteresis))
+			{
+				PORTB &= ~(1 << DDB1);
+			}
+		}
+		else
 		{
 			PORTB |= (1 << DDB1);
 		}
@@ -73,6 +81,12 @@ uint16_t check_sens(){
 
 
 uint8_t check_but(){
-	if (PINB & (1 << DDB4)) return 0;
+	if (PINB & (1 << DDB4)) return 0; //inverse
 	else return 1;
+}
+
+
+uint8_t check_mov(){
+	if (PINB & (1 << DDB0)) return 1;
+	else return 0;
 }
